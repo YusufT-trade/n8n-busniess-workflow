@@ -1,0 +1,105 @@
+{
+  "name": "2. AI Content Generation & Auto Post",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "interval": 12
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "id": "1"
+    },
+    {
+      "parameters": {
+        "url": "https://newsapi.org/v2/top-headlines?category=technology",
+        "options": {}
+      },
+      "name": "Fetch News Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [220, 0],
+      "id": "2"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "prompt": "=Sen alanında uzman bir teknoloji ve dijital pazarlama stratejistisin. Aşağıdaki gelişmeyi kullanarak, LinkedIn ve Twitter'da paylaşılmaya uygun, vizyoner, profesyonel ve etkileşim odaklı bir sosyal medya gönderisi hazırla. Sektöre nasıl bir etki yaratacağını kısaca analiz et, sorunu/çözümü vurgula ve okuyucuyu profesyonel bir soru sorarak tartışmaya davet et. Emojileri ölçülü kullan ve konuya uygun 3-4 hashtag ekle.\\n\\nHaber: {{ $json.title }}"
+      },
+      "name": "OpenAI - Generate Post Content",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [440, 0],
+      "id": "3"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}"
+      },
+      "name": "Twitter - Create Tweet",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [660, -100],
+      "id": "4"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}"
+      },
+      "name": "LinkedIn - Create Post",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [660, 100],
+      "id": "5"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch News Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch News Data": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Generate Post Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Generate Post Content": {
+      "main": [
+        [
+          {
+            "node": "Twitter - Create Tweet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "LinkedIn - Create Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

@@ -1,0 +1,82 @@
+{
+  "name": "4. Membership, Payment & Content Lock Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "checkout.session.completed"
+        ]
+      },
+      "name": "Stripe Trigger",
+      "type": "n8n-nodes-base.stripeTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "1",
+      "webhookId": "some-webhook-id"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.yourwebsite.com/update-user-role",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "={{ $json.data.object.customer_email }}"
+            },
+            {
+              "name": "role",
+              "value": "premium"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Unlock Content in DB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [220, 0],
+      "id": "2"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.data.object.customer_email }}",
+        "subject": "Premium Üyeliğiniz Aktifleştirildi: Özel İçeriklere Erişiminiz Açık 🚀",
+        "message": "=Merhaba,\n\nAramıza hoş geldiniz! Ödeme işleminiz başarıyla tamamlandı ve hesabınız an itibarıyla Premium statüsüne yükseltildi.\n\nSadece Premium üyelerimize sunduğumuz ayrıcalıklı içeriklere, detaylı stratejilere ve özel kaynaklara artık tam erişim hakkına sahipsiniz. Amacımız, hedeflerinize daha hızlı ve güvenli adımlarla ulaşmanız için size en yüksek kalitede değer sunmaktır.\n\nMateryallere hemen ulaşmak ve uzman topluluğumuza katılmak için aşağıdaki güvenli bağlantıyı kullanabilirsiniz:\n\n👉 Premium Portal Girişi: https://yourwebsite.com/premium\n\nSürecinizi hızlandıracak bu profesyonel serüvende yanınızda olmaktan mutluluk duyuyoruz. Herhangi bir sorunuz veya desteğe ihtiyacınız olursa, bu e-postayı doğrudan yanıtlayarak bize ulaşabilirsiniz.\n\nBaşarılar dileriz,\n[Markanız/Şirketiniz] Ekibi"
+      },
+      "name": "Gmail - Send Welcome Details",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [440, 0],
+      "id": "3"
+    }
+  ],
+  "connections": {
+    "Stripe Trigger": {
+      "main": [
+        [
+          {
+            "node": "Unlock Content in DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unlock Content in DB": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Send Welcome Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

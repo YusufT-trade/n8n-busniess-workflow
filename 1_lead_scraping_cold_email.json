@@ -1,0 +1,92 @@
+{
+  "name": "1. Lead Scraping & Cold Email Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "interval": 1
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "id": "1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.example.com/leads",
+        "options": {}
+      },
+      "name": "Fetch Leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [220, 0],
+      "id": "2"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "prompt": "=Sen üst düzey bir B2B satış uzmanı ve metin yazarısın. Şirketi {{ $json.company }} olan {{ $json.name }} adlı kişiye özel, samimi ama son derece profesyonel bir 'cold email' (soğuk e-posta) yaz. Amacımız, onlara sunduğumuz yapay zeka otomasyon çözümleriyle şirketlerinin operasyonel maliyetlerini nasıl düşürebileceğimizi ve verimliliklerini nasıl artırabileceğimizi göstermek. E-posta kısa, dikkat çekici ve doğrudan konuya giren bir yapıda olmalı. İçinde net bir 'Call to Action' barındırsın (Örn: 15 dakikalık bir tanışma toplantısı talep et). Kusursuz bir Türkçe kullan."
+      },
+      "name": "OpenAI - Generate Email",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [440, 0],
+      "id": "3"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "{{ $json.company }} operasyonlarında yapay zeka ile verimlilik artışı hk.",
+        "message": "={{ $json.text }}"
+      },
+      "name": "Gmail - Send Cold Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [660, 0],
+      "id": "4"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Leads": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Generate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Generate Email": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Send Cold Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

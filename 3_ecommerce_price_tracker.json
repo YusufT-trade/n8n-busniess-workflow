@@ -1,0 +1,154 @@
+{
+  "name": "3. E-Commerce Price & Stock Tracker Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "interval": 30
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1"
+    },
+    {
+      "parameters": {
+        "url": "https://example-ecommerce.com/product/123",
+        "options": {}
+      },
+      "name": "Fetch Product Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "2"
+    },
+    {
+      "parameters": {
+        "extractionValues": {
+          "values": [
+            {
+              "key": "price",
+              "cssSelector": ".product-price",
+              "returnValue": "text"
+            },
+            {
+              "key": "stock",
+              "cssSelector": ".stock-status",
+              "returnValue": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "HTML Extract",
+      "type": "n8n-nodes-base.htmlExtract",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "id": "3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ parseFloat($json.price.replace(/[^0-9.]/g, '')) }}",
+              "operation": "smaller",
+              "value2": 500
+            }
+          ],
+          "string": [
+            {
+              "value1": "={{ $json.stock }}",
+              "value2": "In Stock"
+            }
+          ]
+        }
+      },
+      "name": "IF - Price Dropped or In Stock",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        660,
+        0
+      ],
+      "id": "4"
+    },
+    {
+      "parameters": {
+        "chatId": "-1001234567890",
+        "text": "=🔔 Kritik Fiyat / Stok Alarmı: Fırsat Tespit Edildi!\\n\\nTakip ettiğiniz ürün belirlenen hedef kriterlerine ulaştı. Satın alma işlemini gerçekleştirmek için en uygun zaman olabilir.\\n\\n📊 Güncel Piyasa Durumu:\\n• Mevcut Fiyat: {{ $json.price }}\\n• Stok Durumu: {{ $json.stock }}\\n\\n🛒 Ürünü hemen incelemek ve hızlıca aksiyon almak için güvenli bağlantıya tıklayın:\\n🔗 https://example-ecommerce.com/product/123\\n\\n⚡ Piyasayı sizin için 7/24 izlemeye ve analiz etmeye devam ediyoruz."
+      },
+      "name": "Telegram - Send Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        -100
+      ],
+      "id": "5"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Product Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Product Page": {
+      "main": [
+        [
+          {
+            "node": "HTML Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Extract": {
+      "main": [
+        [
+          {
+            "node": "IF - Price Dropped or In Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Price Dropped or In Stock": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}
